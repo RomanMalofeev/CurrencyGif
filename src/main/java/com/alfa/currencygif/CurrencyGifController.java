@@ -1,11 +1,12 @@
 package com.alfa.currencygif;
 
 
+import com.alfa.currencygif.exceptions.InvalidCurrencyException;
 import com.alfa.currencygif.service.CurrencyGifService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 
@@ -14,7 +15,17 @@ public class CurrencyGifController {
     private CurrencyGifService currencyGifService;
 
     @RequestMapping("/currencies/{currency}/get-gif")
-    public String getGif(@PathVariable String currency){
+    public String getGif(@PathVariable String currency) throws InvalidCurrencyException {
+        currency = currency.toUpperCase();
         return currencyGifService.getGifPage(currency);
     }
+
+    @ExceptionHandler(InvalidCurrencyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleNoSuchElementFoundException(InvalidCurrencyException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exception.getMessage());
+    }
+
 }

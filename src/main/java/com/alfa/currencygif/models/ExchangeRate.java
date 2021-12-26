@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 @JsonAutoDetect
-public class ExchangeBean {
+public class ExchangeRate {
     @JsonProperty("disclaimer")
     String disclaimer;
 

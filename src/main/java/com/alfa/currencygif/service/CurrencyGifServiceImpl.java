@@ -2,7 +2,8 @@ package com.alfa.currencygif.service;
 
 import com.alfa.currencygif.clients.CurrencyExchangeServiceProxy;
 import com.alfa.currencygif.clients.GiphyProxy;
-import com.alfa.currencygif.models.ExchangeBean;
+import com.alfa.currencygif.exceptions.InvalidCurrencyException;
+import com.alfa.currencygif.models.ExchangeRate;
 import com.alfa.currencygif.models.RandomGiphy;
 import com.alfa.currencygif.properties.GiphyProperties;
 import com.alfa.currencygif.properties.OpenExchangeRatesProperties;
@@ -14,7 +15,7 @@ import java.util.GregorianCalendar;
 
 @Service
 @EnableConfigurationProperties({GiphyProperties.class, OpenExchangeRatesProperties.class})
-public class CurrencyGifServiceImpl implements CurrencyGifService {
+public class CurrencyGifServiceImpl implements CurrencyGifService{
     private final CurrencyExchangeServiceProxy proxyCurrency ;
     private final GiphyProxy proxyGif;
     private final OpenExchangeRatesProperties openExchangeRatesProperties;
@@ -27,32 +28,33 @@ public class CurrencyGifServiceImpl implements CurrencyGifService {
         this.giphyProperties = giphyProperties;
     }
 
-    private String getDateForHistorical(int period, String dateFormat) {
+    public String getDateForHistorical(int period, String dateFormat) {
         GregorianCalendar date = new GregorianCalendar();
         date.add(GregorianCalendar.DATE, -period);
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         return formatter.format(date.getTime());
     }
 
-    private int compareRates(String currency){
+    public int compareRates(String currency) throws InvalidCurrencyException {
         String date = getDateForHistorical(openExchangeRatesProperties.getPeriod(), openExchangeRatesProperties.getDateFormat());
-        ExchangeBean todayCurrency = proxyCurrency.Latest(openExchangeRatesProperties.getAppId(), openExchangeRatesProperties.getBase(), currency);
-        ExchangeBean yesturdayCurrency = proxyCurrency.Historical(openExchangeRatesProperties.getAppId(), date, openExchangeRatesProperties.getBase(), currency);
+        ExchangeRate todayCurrency = proxyCurrency.Latest(openExchangeRatesProperties.getAppId(), openExchangeRatesProperties.getBase(), currency);
+        ExchangeRate yesturdayCurrency = proxyCurrency.Historical(openExchangeRatesProperties.getAppId(), date, openExchangeRatesProperties.getBase(), currency);
+        if (todayCurrency.getRates().get(currency) == null || yesturdayCurrency.getRates().get(currency) == null) throw new InvalidCurrencyException();
         return Double.compare(todayCurrency.getRates().get(currency), yesturdayCurrency.getRates().get(currency));
     }
 
-    private String getPositiveGifUrl(){
+    public String getPositiveGifUrl(){
         RandomGiphy randomGif = proxyGif.randomGif(giphyProperties.getApiKey(), giphyProperties.getPositiveTag(), giphyProperties.getRating());
         return randomGif.getData().getImages().get("original").getUrl();
     }
 
-    private String getNegativeGifUrl(){
+    public String getNegativeGifUrl(){
         RandomGiphy randomGif = proxyGif.randomGif(giphyProperties.getApiKey(), giphyProperties.getNegativeTag(), giphyProperties.getRating());
         return randomGif.getData().getImages().get("original").getUrl();
     }
 
     @Override
-    public String getGifPage(String currency) {
+    public String getGifPage(String currency) throws InvalidCurrencyException {
         StringBuffer html = new StringBuffer();
         html.append("<div id=gif align=center>");
         if (compareRates(currency) >= 0) {

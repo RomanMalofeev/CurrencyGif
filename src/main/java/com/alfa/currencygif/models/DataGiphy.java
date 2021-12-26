@@ -24,14 +24,6 @@ public class DataGiphy {
     @JsonProperty("images")
     private Map<String, ImageGiphy> images;
 
-    public DataGiphy(String type, String id, String url, String rating, Map<String, ImageGiphy> images) {
-        this.type = type;
-        this.id = id;
-        this.url = url;
-        this.rating = rating;
-        this.images = images;
-    }
-
     public void setType(String type) {
         this.type = type;
     }

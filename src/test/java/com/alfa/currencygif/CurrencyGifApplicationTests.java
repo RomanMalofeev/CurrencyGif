@@ -10,9 +10,4 @@ class CurrencyGifApplicationTests {
     @Test
     void contextLoads() {
     }
-
-    @Test
-    void name() {
-
-    }
 }
