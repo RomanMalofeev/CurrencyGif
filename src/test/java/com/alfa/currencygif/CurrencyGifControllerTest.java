@@ -1,12 +1,13 @@
+/*
+ * Copyright (c) 2021.  Roman Malofeev
+ * Junior java developer task for alfa-bank.
+ */
+
 package com.alfa.currencygif;
 
 import com.alfa.currencygif.clients.CurrencyExchangeServiceProxy;
 import com.alfa.currencygif.clients.GiphyProxy;
-import com.alfa.currencygif.models.DataGiphy;
 import com.alfa.currencygif.models.ExchangeRate;
-import com.alfa.currencygif.models.ImageGiphy;
-import com.alfa.currencygif.models.RandomGiphy;
-import org.checkerframework.checker.units.qual.A;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -16,15 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,8 +38,8 @@ class CurrencyGifControllerTest {
     @Value("${openexchangerates.base}")
     private String base;
 
-    private ExchangeRate currentRates;
-    private ExchangeRate yesterdayRates;
+    private final ExchangeRate currentRates;
+    private final ExchangeRate yesterdayRates;
 
 
     {
@@ -65,22 +63,20 @@ class CurrencyGifControllerTest {
         yesterdayRatesMap.put("PS", 2.8);
         this.yesterdayRates.setRates(yesterdayRatesMap);
     }
-
-    private RandomGiphy randomGiphy;
-    private ImageGiphy imageGiphy;
-    private DataGiphy dataGiphy;
-
-
-    {
-        this.imageGiphy = new ImageGiphy();
-        this.randomGiphy = new RandomGiphy();
-        this.dataGiphy = new DataGiphy();
-        imageGiphy.setUrl("testUrl");
-        HashMap<String, ImageGiphy> images = new HashMap<>();
-        images.put("original", imageGiphy);
-        dataGiphy.setImages(images);
-        randomGiphy.setData(dataGiphy);
-    }
+    String randomGiphy = """
+            {
+              "data": {
+                "images": {
+                  "original": {
+                    "url": "testUrl"
+                  }
+                }
+              },
+              "meta": {
+                "msg": "OK",
+                "status": 200
+              }
+            }""";
 
     @Test
     void getGif() throws Exception {
@@ -98,9 +94,9 @@ class CurrencyGifControllerTest {
     }
 
     @Test
-    void handleNoSuchElementFoundException() throws Exception {
+    void handleInvalidCurrencyException() throws Exception {
         String currency = "invalid";
-        String errorMasage = "Invalid currency: an incorrect currency has been sent, please check the available currencies in the documentation";
+        String errorMessage = "Invalid currency: an incorrect currency has been sent, please check the available currencies in the documentation";
         Mockito.when(currencyExchangeServiceProxy.Latest(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(this.currentRates);
         Mockito.when(currencyExchangeServiceProxy.Historical(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
@@ -109,6 +105,22 @@ class CurrencyGifControllerTest {
                 .thenReturn(randomGiphy);
         mockMvc.perform(MockMvcRequestBuilders.get("/currencies/"+ currency + "/get-gif"))
                 .andExpect(MockMvcResultMatchers.status().is(400))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString(errorMasage)));
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString(errorMessage)));
+    }
+
+    @Test
+    void handleJsonProcessingException() throws Exception {
+        randomGiphy = "";
+        String currency = "EQ";
+        String errorMessage = "Internal server error! Please, try again later.";
+        Mockito.when(currencyExchangeServiceProxy.Latest(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+                .thenReturn(this.currentRates);
+        Mockito.when(currencyExchangeServiceProxy.Historical(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+                .thenReturn(this.yesterdayRates);
+        Mockito.when(giphyProxy.randomGif(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+                .thenReturn(randomGiphy);
+        mockMvc.perform(MockMvcRequestBuilders.get("/currencies/"+ currency + "/get-gif"))
+                .andExpect(MockMvcResultMatchers.status().is(500))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString(errorMessage)));
     }
 }

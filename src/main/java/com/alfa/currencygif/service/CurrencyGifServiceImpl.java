@@ -1,12 +1,18 @@
+/*
+ * Copyright (c) 2021.  Roman Malofeev
+ * Junior java developer task for alfa-bank.
+ */
+
 package com.alfa.currencygif.service;
 
 import com.alfa.currencygif.clients.CurrencyExchangeServiceProxy;
 import com.alfa.currencygif.clients.GiphyProxy;
 import com.alfa.currencygif.exceptions.InvalidCurrencyException;
 import com.alfa.currencygif.models.ExchangeRate;
-import com.alfa.currencygif.models.RandomGiphy;
 import com.alfa.currencygif.properties.GiphyProperties;
 import com.alfa.currencygif.properties.OpenExchangeRatesProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -38,35 +44,39 @@ public class CurrencyGifServiceImpl implements CurrencyGifService{
     public int compareRates(String currency) throws InvalidCurrencyException {
         String date = getDateForHistorical(openExchangeRatesProperties.getPeriod(), openExchangeRatesProperties.getDateFormat());
         ExchangeRate todayCurrency = proxyCurrency.Latest(openExchangeRatesProperties.getAppId(), openExchangeRatesProperties.getBase(), currency);
-        ExchangeRate yesturdayCurrency = proxyCurrency.Historical(openExchangeRatesProperties.getAppId(), date, openExchangeRatesProperties.getBase(), currency);
-        if (todayCurrency.getRates().get(currency) == null || yesturdayCurrency.getRates().get(currency) == null) throw new InvalidCurrencyException();
-        return Double.compare(todayCurrency.getRates().get(currency), yesturdayCurrency.getRates().get(currency));
+        ExchangeRate yesterdayCurrency = proxyCurrency.Historical(openExchangeRatesProperties.getAppId(), date, openExchangeRatesProperties.getBase(), currency);
+        if (todayCurrency.getRates().get(currency) == null || yesterdayCurrency.getRates().get(currency) == null) throw new InvalidCurrencyException();
+        return Double.compare(todayCurrency.getRates().get(currency), yesterdayCurrency.getRates().get(currency));
     }
 
-    public String getPositiveGifUrl(){
-        RandomGiphy randomGif = proxyGif.randomGif(giphyProperties.getApiKey(), giphyProperties.getPositiveTag(), giphyProperties.getRating());
-        return randomGif.getData().getImages().get("original").getUrl();
-    }
-
-    public String getNegativeGifUrl(){
-        RandomGiphy randomGif = proxyGif.randomGif(giphyProperties.getApiKey(), giphyProperties.getNegativeTag(), giphyProperties.getRating());
-        return randomGif.getData().getImages().get("original").getUrl();
+    public String getGifUrlByTag(String tag) throws JsonProcessingException {
+        String randomGif = proxyGif.randomGif(giphyProperties.getApiKey(), tag, giphyProperties.getRating());
+        return parseUrlFromGiphyJson(randomGif);
     }
 
     @Override
-    public String getGifPage(String currency) throws InvalidCurrencyException {
-        StringBuffer html = new StringBuffer();
+    public String getGifPage(String currency) throws InvalidCurrencyException, JsonProcessingException {
+        StringBuilder html = new StringBuilder();
         html.append("<div id=gif align=center>");
         if (compareRates(currency) >= 0) {
             html.append("<img src=\"");
-            html.append(getPositiveGifUrl());
+            html.append(getGifUrlByTag(giphyProperties.getPositiveTag()));
             html.append("\" align=\"middle\">");
         } else {
             html.append("<img src=\"");
-            html.append(getNegativeGifUrl());
+            html.append(getGifUrlByTag(getGifUrlByTag(giphyProperties.getNegativeTag())));
             html.append("\" align=\"middle\">");
         }
         html.append("</div>");
         return html.toString();
+    }
+
+    public String parseUrlFromGiphyJson(String json) throws JsonProcessingException {
+            ObjectMapper mapper = new ObjectMapper();
+        return mapper.readTree(json)
+                .get("data")
+                .get("images")
+                .get("original")
+                .get("url").asText();
     }
 }

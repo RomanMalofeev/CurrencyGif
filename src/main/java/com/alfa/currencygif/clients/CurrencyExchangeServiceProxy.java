@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2021.  Roman Malofeev
+ * Junior java developer task for alfa-bank.
+ */
 package com.alfa.currencygif.clients;
 
 import com.alfa.currencygif.models.ExchangeRate;
