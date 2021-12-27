@@ -22,6 +22,8 @@ Nice to Have
 
     GET /currencies/{currency}/get-gif  
 ## Запуск  
+Путь к файлу .jar: CurrencyGif/build/libs/  
+
     java -jar CurrencyGif-0.0.1-SNAPSHOT-plain.jar
 ## Допустимые коды валют  
 {  
