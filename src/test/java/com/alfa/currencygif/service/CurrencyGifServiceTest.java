@@ -13,7 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,7 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-class CurrencyGifServiceImplTest {
+class CurrencyGifServiceTest {
 
     @Value("${openexchangerates.base}")
     private String base;
@@ -32,8 +31,6 @@ class CurrencyGifServiceImplTest {
     private String positiveGifTag;
     @Value("${giphy.negative-tag}")
     private String negativeGifTag;
-    @Autowired
-    private CurrencyGifServiceImpl currencyGifService;
     @MockBean
     private GiphyProxy giphyProxy;
     @MockBean
@@ -88,7 +85,7 @@ class CurrencyGifServiceImplTest {
                 .thenReturn(this.currentRates);
         Mockito.when(currencyExchangeServiceProxy.Historical(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(this.yesterdayRates);
-        int result = currencyGifService.compareRates("EQ");
+        int result = CurrencyGifService.compareRates("EQ");
         assertEquals(0, result);
     }
 
@@ -98,7 +95,7 @@ class CurrencyGifServiceImplTest {
                 .thenReturn(this.currentRates);
         Mockito.when(currencyExchangeServiceProxy.Historical(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(this.yesterdayRates);
-        int result = currencyGifService.compareRates("NG");
+        int result = CurrencyGifService.compareRates("NG");
         assertEquals(-1, result);
     }
 
@@ -108,14 +105,14 @@ class CurrencyGifServiceImplTest {
                 .thenReturn(this.currentRates);
         Mockito.when(currencyExchangeServiceProxy.Historical(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(this.yesterdayRates);
-        int result = currencyGifService.compareRates("PS");
+        int result = CurrencyGifService.compareRates("PS");
         assertEquals(1, result);
     }
     @Test
     void getPositiveGifUrl() throws JsonProcessingException {
         Mockito.when(giphyProxy.randomGif(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(randomGiphy);
-        String response = currencyGifService.getGifUrlByTag(positiveGifTag);
+        String response = CurrencyGifService.getGifUrlByTag(positiveGifTag);
         assertEquals(response, testUrlGif);
     }
 
@@ -123,7 +120,7 @@ class CurrencyGifServiceImplTest {
     void getNegativeGifUrl() throws JsonProcessingException {
         Mockito.when(giphyProxy.randomGif(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .thenReturn(randomGiphy);
-        String response = currencyGifService.getGifUrlByTag(negativeGifTag);
+        String response = CurrencyGifService.getGifUrlByTag(negativeGifTag);
         assertEquals(response, testUrlGif);
     }
 }

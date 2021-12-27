@@ -13,7 +13,7 @@ import javax.validation.constraints.NotEmpty;
 @Component
 @ConfigurationProperties(prefix = "giphy")
 @Validated
-public class GiphyProperties {
+public final class GiphyProperties {
     @NotEmpty
     private String url;
     @NotEmpty

@@ -15,16 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 
 public class CurrencyGifController {
-    private final CurrencyGifService currencyGifService;
-
-    public CurrencyGifController(CurrencyGifService currencyGifService) {
-        this.currencyGifService = currencyGifService;
-    }
 
     @RequestMapping("/currencies/{currency}/get-gif")
     public String getGif(@PathVariable String currency) throws InvalidCurrencyException, JsonProcessingException {
         currency = currency.toUpperCase();
-        return currencyGifService.getGifPage(currency);
+        return CurrencyGifService.getGifPage(currency);
     }
 
     @ExceptionHandler(InvalidCurrencyException.class)
