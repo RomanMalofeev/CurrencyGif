@@ -57,7 +57,7 @@ public class CurrencyGifService {
     public static String getGifPage(String currency) throws InvalidCurrencyException, JsonProcessingException {
         StringBuilder html = new StringBuilder();
         html.append("<div id=gif align=center>");
-        if (compareRates(currency) <= 0) {
+        if (compareRates(currency) >= 0) {
             html.append("<img src=\"");
             html.append(getGifUrlByTag(giphyProperties.getPositiveTag()));
             html.append("\" align=\"middle\">");
