@@ -24,7 +24,7 @@ Nice to Have
 ## Запуск  
 Путь к файлу .jar: CurrencyGif/build/libs/  
 
-    java -jar CurrencyGif-0.0.1-SNAPSHOT-plain.jar
+    java -jar CurrencyGif-0.0.1-SNAPSHOT.jar
 ## Допустимые коды валют  
 {  
   "AED": "United Arab Emirates Dirham",  
